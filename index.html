@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🚀 The Earth, Sun & Moon – Science Lesson</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #020814;
+    --navy: #050f28;
+    --cyan: #00e5ff;
+    --gold: #ffd700;
+    --pink: #ff6eb4;
+    --green: #39ff14;
+    --white: #e8f4ff;
+    --nav-w: 110px;
+    --earth-blue: #1a6fc4;
+    --sun-orange: #ff9800;
+    --moon-gray: #aaaaaa;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--white);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ──────────── STARFIELD CANVAS ──────────── */
+  #starCanvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ──────────── LEFT NAV ──────────── */
+  #nav {
+    position: fixed;
+    top: 0; left: 0;
+    width: var(--nav-w);
+    height: 100vh;
+    background: rgba(2,8,20,0.92);
+    border-right: 2px solid rgba(0,229,255,0.25);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 8px;
+    gap: 10px;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+  }
+
+  #nav .logo {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    color: var(--cyan);
+    text-align: center;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+    line-height: 1.4;
+  }
+
+  .nav-btn {
+    width: 86px;
+    padding: 12px 6px;
+    border: 2px solid rgba(0,229,255,0.4);
+    border-radius: 14px;
+    background: rgba(0,229,255,0.07);
+    color: var(--white);
+    font-family: 'Nunito', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.25s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    line-height: 1.2;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .nav-btn .nav-icon { font-size: 22px; }
+  .nav-btn:hover, .nav-btn.active {
+    background: rgba(0,229,255,0.22);
+    border-color: var(--cyan);
+    color: var(--cyan);
+    box-shadow: 0 0 16px rgba(0,229,255,0.4);
+    transform: scale(1.05);
+  }
+
+  .nav-divider {
+    width: 60px;
+    height: 1px;
+    background: rgba(0,229,255,0.2);
+    margin: 4px 0;
+  }
+
+  .nav-arrow {
+    width: 86px;
+    height: 52px;
+    border-radius: 14px;
+    border: 2px solid rgba(255,215,0,0.5);
+    background: rgba(255,215,0,0.08);
+    color: var(--gold);
+    font-size: 26px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .nav-arrow:hover {
+    background: rgba(255,215,0,0.22);
+    box-shadow: 0 0 16px rgba(255,215,0,0.4);
+    transform: scale(1.08);
+  }
+  .nav-arrow:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  #progress-bar {
+    width: 6px;
+    flex: 1;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 4px 0;
+  }
+  #progress-fill {
+    width: 100%;
+    background: linear-gradient(to bottom, var(--cyan), var(--gold));
+    border-radius: 3px;
+    transition: height 0.5s ease;
+  }
+
+  #timer-display {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    text-align: center;
+    font-family: 'Orbitron', monospace;
+  }
+
+  /* ──────────── MAIN CONTENT ──────────── */
+  #content {
+    margin-left: var(--nav-w);
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  .screen {
+    display: none;
+    min-height: 100vh;
+    padding: 40px 50px 40px 40px;
+    animation: fadeIn 0.6s ease;
+  }
+  .screen.active { display: flex; flex-direction: column; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ──────────── TYPOGRAPHY ──────────── */
+  .screen-label {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--cyan);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .screen-title {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(24px, 3.5vw, 44px);
+    font-weight: 900;
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(255,215,0,0.5);
+    margin-bottom: 8px;
+    line-height: 1.15;
+  }
+  .screen-sub {
+    font-size: 18px;
+    color: rgba(232,244,255,0.75);
+    margin-bottom: 30px;
+    font-weight: 600;
+  }
+
+  /* ──────────── BIG BUTTONS ──────────── */
+  .big-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 36px;
+    border-radius: 18px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    cursor: pointer;
+    border: none;
+    transition: all 0.25s;
+    -webkit-tap-highlight-color: transparent;
+    letter-spacing: 0.5px;
+  }
+  .btn-cyan {
+    background: linear-gradient(135deg, #0099cc, #00e5ff);
+    color: #020814;
+    box-shadow: 0 6px 30px rgba(0,229,255,0.4);
+  }
+  .btn-cyan:hover { transform: scale(1.05); box-shadow: 0 8px 40px rgba(0,229,255,0.6); }
+
+  .btn-gold {
+    background: linear-gradient(135deg, #cc8800, #ffd700);
+    color: #020814;
+    box-shadow: 0 6px 30px rgba(255,215,0,0.4);
+  }
+  .btn-gold:hover { transform: scale(1.05); box-shadow: 0 8px 40px rgba(255,215,0,0.6); }
+
+  .btn-green {
+    background: linear-gradient(135deg, #00aa00, #39ff14);
+    color: #020814;
+    box-shadow: 0 6px 30px rgba(57,255,20,0.4);
+  }
+  .btn-green:hover { transform: scale(1.05); box-shadow: 0 8px 40px rgba(57,255,20,0.6); }
+
+  .btn-pink {
+    background: linear-gradient(135deg, #cc2277, #ff6eb4);
+    color: #fff;
+    box-shadow: 0 6px 30px rgba(255,110,180,0.4);
+  }
+  .btn-pink:hover { transform: scale(1.05); }
+
+  /* ──────────── FACT CARD ──────────── */
+  .fact-card {
+    background: rgba(0,229,255,0.07);
+    border: 1.5px solid rgba(0,229,255,0.25);
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin-top: 10px;
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.5;
+    transition: all 0.3s;
+  }
+  .fact-card.glow {
+    border-color: var(--cyan);
+    background: rgba(0,229,255,0.14);
+    box-shadow: 0 0 20px rgba(0,229,255,0.3);
+  }
+
+  /* ════════════════════════════════════════
+     SCREEN 1 – WARM-UP
+  ════════════════════════════════════════ */
+  #s1-planets {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 60px;
+    margin: 20px 0 30px;
+    flex-wrap: wrap;
+  }
+
+  .planet-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .planet-wrap:hover .sphere-3d { transform: scale(1.08); }
+
+  .sphere-3d {
+    border-radius: 50%;
+    transition: transform 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .sphere-3d::after {
+    content: '';
+    position: absolute;
+    top: 12%;
+    left: 15%;
+    width: 35%;
+    height: 30%;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.28);
+    filter: blur(6px);
+  }
+
+  /* Earth */
+  .earth-sphere {
+    width: 160px; height: 160px;
+    background: radial-gradient(circle at 35% 35%,
+      #3a9fd5 0%, #1a6fc4 35%, #0d4a8a 65%, #073060 100%);
+    box-shadow: 0 0 40px rgba(26,111,196,0.6), inset 0 -20px 40px rgba(0,0,0,0.5);
+    animation: spinEarth 12s linear infinite paused;
+  }
+  /* Continent blobs */
+  .earth-sphere::before {
+    content: '';
+    position: absolute;
+    top: 30%; left: 25%;
+    width: 45%; height: 35%;
+    background: rgba(34,139,34,0.7);
+    border-radius: 40% 60% 55% 45%;
+    box-shadow: 30px 20px 0 rgba(34,139,34,0.5), -15px 30px 0 rgba(34,139,34,0.4);
+  }
+
+  /* Sun */
+  .sun-sphere {
+    width: 200px; height: 200px;
+    background: radial-gradient(circle at 38% 38%,
+      #fffde7 0%, #ffee58 20%, #ffa000 55%, #e65100 85%, #bf360c 100%);
+    box-shadow: 0 0 60px rgba(255,165,0,0.9), 0 0 120px rgba(255,100,0,0.4);
+    animation: pulseSun 3s ease-in-out infinite;
+  }
+  .sun-sphere::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 55% 55%,
+      transparent 60%, rgba(200,80,0,0.4) 100%);
+  }
+
+  /* Moon */
+  .moon-sphere {
+    width: 110px; height: 110px;
+    background: radial-gradient(circle at 35% 35%,
+      #d4d4d4 0%, #a8a8a8 50%, #6e6e6e 85%, #4a4a4a 100%);
+    box-shadow: 0 0 20px rgba(160,160,160,0.4), inset 0 -15px 30px rgba(0,0,0,0.6);
+  }
+  .moon-sphere::before {
+    content: '';
+    position: absolute;
+    top: 22%; left: 18%;
+    width: 22%; height: 22%;
+    border-radius: 50%;
+    background: rgba(100,100,100,0.6);
+    box-shadow: 30px 10px 0 8px rgba(100,100,100,0.4),
+                20px 35px 0 4px rgba(80,80,80,0.5),
+                50px 25px 0 6px rgba(90,90,90,0.4);
+  }
+
+  @keyframes spinEarth {
+    from { filter: hue-rotate(0deg); }
+    to   { filter: hue-rotate(10deg); }
+  }
+  @keyframes pulseSun {
+    0%, 100% { box-shadow: 0 0 60px rgba(255,165,0,0.9), 0 0 120px rgba(255,100,0,0.4); }
+    50%       { box-shadow: 0 0 80px rgba(255,200,0,1),   0 0 160px rgba(255,120,0,0.6); }
+  }
+  @keyframes spinSphere {
+    from { transform: rotate(0deg) scale(1.08); }
+    to   { transform: rotate(360deg) scale(1.08); }
+  }
+
+  .planet-name {
+    font-family: 'Orbitron', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--white);
+    text-shadow: 0 0 10px rgba(0,229,255,0.5);
+  }
+
+  #spherical-text {
+    display: none;
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(36px, 6vw, 80px);
+    font-weight: 900;
+    text-align: center;
+    background: linear-gradient(90deg, var(--cyan), var(--gold), var(--pink), var(--cyan));
+    background-size: 300% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 2.5s linear infinite;
+    margin: 10px 0 20px;
+    letter-spacing: 4px;
+  }
+  #spherical-text.show { display: block; }
+
+  @keyframes shimmer {
+    0%   { background-position: 0% center; }
+    100% { background-position: 300% center; }
+  }
+
+  #s1-facts {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  .fact-bubble {
+    background: rgba(255,255,255,0.06);
+    border: 1.5px solid rgba(255,255,255,0.15);
+    border-radius: 50px;
+    padding: 12px 22px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .fact-bubble:hover, .fact-bubble.active {
+    background: rgba(0,229,255,0.18);
+    border-color: var(--cyan);
+    color: var(--cyan);
+    box-shadow: 0 0 15px rgba(0,229,255,0.3);
+  }
+
+  #fact-display {
+    min-height: 70px;
+    margin-top: 16px;
+  }
+
+  /* ════════════════════════════════════════
+     SCREEN 2 – SIZE ILLUSION
+  ════════════════════════════════════════ */
+  #s2-stage {
+    position: relative;
+    height: 340px;
+    background: rgba(5,15,40,0.7);
+    border: 1.5px solid rgba(0,229,255,0.15);
+    border-radius: 24px;
+    overflow: hidden;
+    margin: 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+  }
+
+  #s2-sun {
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 38%,
+      #fffde7 0%, #ffee58 25%, #ffa000 60%, #e65100 88%, #bf360c 100%);
+    flex-shrink: 0;
+    transition: all 0.05s;
+    box-shadow: 0 0 60px rgba(255,165,0,0.9);
+    animation: pulseSun 3s ease-in-out infinite;
+  }
+  #s2-moon {
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%,
+      #d4d4d4 0%, #a8a8a8 50%, #6e6e6e 85%, #4a4a4a 100%);
+    flex-shrink: 0;
+    transition: all 0.05s;
+    box-shadow: 0 0 15px rgba(160,160,160,0.3);
+  }
+
+  #s2-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 15px;
+    color: rgba(255,255,255,0.6);
+    font-weight: 700;
+  }
+
+  .slider-wrap {
+    background: rgba(5,15,40,0.7);
+    border: 1.5px solid rgba(255,215,0,0.25);
+    border-radius: 20px;
+    padding: 20px 30px;
+    margin: 10px 0;
+  }
+  .slider-label {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--gold);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 12px;
+    border-radius: 6px;
+    background: linear-gradient(to right, rgba(0,229,255,0.3), rgba(255,215,0,0.3));
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--cyan), var(--gold));
+    box-shadow: 0 0 14px rgba(0,229,255,0.6);
+    cursor: pointer;
+  }
+
+  #s2-message {
+    display: none;
+    background: linear-gradient(135deg, rgba(0,229,255,0.1), rgba(255,215,0,0.1));
+    border: 2px solid rgba(0,229,255,0.4);
+    border-radius: 18px;
+    padding: 18px 24px;
+    font-size: 18px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.6;
+    margin-top: 10px;
+    animation: fadeIn 0.5s ease;
+  }
+  #s2-message.show { display: block; }
+
+  /* ════════════════════════════════════════
+     SCREEN 3 – GRAVITY
+  ════════════════════════════════════════ */
+  #s3-top {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin: 10px 0 20px;
+  }
+
+  #rock-container {
+    flex: 0 0 260px;
+    height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  #rock-svg {
+    transition: all 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    filter: drop-shadow(0 0 10px rgba(150,150,200,0.3));
+  }
+  #rock-svg.spherical {
+    filter: drop-shadow(0 0 30px rgba(0,229,255,0.5));
+  }
+
+  .gravity-arrows {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+  .gravity-arrows.show { opacity: 1; }
+
+  #s3-controls {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  #gravity-text {
+    display: none;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--cyan);
+    line-height: 1.6;
+    background: rgba(0,229,255,0.07);
+    border: 1.5px solid rgba(0,229,255,0.25);
+    border-radius: 16px;
+    padding: 16px 20px;
+    animation: fadeIn 0.5s ease;
+  }
+  #gravity-text.show { display: block; }
+
+  /* Jump animation section */
+  #jump-section {
+    background: rgba(5,15,40,0.7);
+    border: 1.5px solid rgba(255,110,180,0.25);
+    border-radius: 20px;
+    padding: 24px;
+    margin-top: 10px;
+  }
+  #jump-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--pink);
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  #jump-stage {
+    position: relative;
+    height: 180px;
+    background: rgba(2,8,20,0.5);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  #jump-ground {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 28px;
+    background: linear-gradient(to top, rgba(0,229,255,0.1), transparent);
+    border-top: 1.5px solid rgba(0,229,255,0.3);
+  }
+  #astronaut {
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 52px;
+    line-height: 1;
+    transition: bottom 0s;
+    user-select: none;
+  }
+  #jump-text {
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.75);
+    min-height: 24px;
+  }
+  .jump-btns {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+  }
+
+  /* ════════════════════════════════════════
+     SCREEN 4 – MODELS GAME
+  ════════════════════════════════════════ */
+  #s4-game {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin: 20px 0;
+  }
+
+  .model-item {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    background: rgba(5,15,40,0.7);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    padding: 28px 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+  }
+  .model-item:hover { border-color: rgba(0,229,255,0.4); }
+  .model-item.selected {
+    border-color: var(--gold);
+    background: rgba(255,215,0,0.08);
+    box-shadow: 0 0 30px rgba(255,215,0,0.3);
+  }
+  .model-item.correct {
+    border-color: var(--green);
+    background: rgba(57,255,20,0.08);
+    box-shadow: 0 0 30px rgba(57,255,20,0.4);
+  }
+  .model-item.wrong {
+    border-color: #ff4444;
+    background: rgba(255,60,60,0.08);
+    animation: shake 0.4s ease;
+  }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25%      { transform: translateX(-10px); }
+    75%      { transform: translateX(10px); }
+  }
+
+  .model-visual {
+    font-size: 14px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.6);
+    text-align: center;
+  }
+
+  /* 2D circle */
+  .circle-2d {
+    width: 120px; height: 120px;
+    border: 4px solid var(--cyan);
+    border-radius: 50%;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: var(--cyan);
+    font-weight: 700;
+  }
+
+  /* 3D sphere */
+  .sphere-3d-mini {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%,
+      #3a9fd5 0%, #1a6fc4 35%, #0d4a8a 65%, #073060 100%);
+    box-shadow: 0 0 30px rgba(26,111,196,0.6), inset 0 -15px 30px rgba(0,0,0,0.5);
+    animation: rotateSphere 8s linear infinite;
+    position: relative;
+    overflow: hidden;
+  }
+  .sphere-3d-mini::after {
+    content: '';
+    position: absolute;
+    top: 10%; left: 14%;
+    width: 35%; height: 28%;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.22);
+    filter: blur(5px);
+  }
+  @keyframes rotateSphere {
+    0%   { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(15deg); }
+  }
+
+  .model-label {
+    font-size: 16px;
+    font-weight: 800;
+  }
+
+  /* Drop targets */
+  #s4-targets {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 20px 0;
+  }
+  .drop-target {
+    flex: 1;
+    min-width: 220px;
+    min-height: 90px;
+    border: 3px dashed rgba(255,255,255,0.25);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.25s;
+    padding: 20px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .drop-target:hover {
+    border-color: var(--cyan);
+    background: rgba(0,229,255,0.07);
+  }
+  .drop-target.highlight {
+    border-color: var(--gold);
+    background: rgba(255,215,0,0.1);
+    box-shadow: 0 0 20px rgba(255,215,0,0.3);
+  }
+  .target-label {
+    font-family: 'Orbitron', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--gold);
+  }
+  .target-icon { font-size: 28px; }
+
+  #s4-feedback {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 800;
+    min-height: 40px;
+    margin: 10px 0;
+  }
+
+  /* Stars burst */
+  .star-burst {
+    position: fixed;
+    pointer-events: none;
+    font-size: 36px;
+    z-index: 9999;
+    animation: burst 1.2s ease forwards;
+  }
+  @keyframes burst {
+    0%   { transform: scale(0) rotate(0deg);   opacity: 1; }
+    60%  { transform: scale(1.5) rotate(180deg); opacity: 1; }
+    100% { transform: scale(0.5) rotate(360deg); opacity: 0; }
+  }
+
+  #s4-score {
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    color: var(--green);
+    text-align: center;
+    margin: 10px 0;
+  }
+
+  /* Game reset */
+  #s4-summary {
+    display: none;
+    text-align: center;
+    background: rgba(57,255,20,0.08);
+    border: 2px solid var(--green);
+    border-radius: 20px;
+    padding: 24px;
+    animation: fadeIn 0.5s ease;
+  }
+  #s4-summary.show { display: block; }
+
+  /* ──────────── GLOW TEXT ──────────── */
+  .glow-cyan { color: var(--cyan); text-shadow: 0 0 12px rgba(0,229,255,0.7); }
+  .glow-gold { color: var(--gold); text-shadow: 0 0 12px rgba(255,215,0,0.7); }
+  .glow-green { color: var(--green); text-shadow: 0 0 12px rgba(57,255,20,0.7); }
+
+  /* ──────────── SCROLLABLE ──────────── */
+  .screen { overflow-y: auto; }
+
+  /* ──────────── RESPONSIVE ──────────── */
+  @media (max-width: 700px) {
+    :root { --nav-w: 80px; }
+    .nav-btn { width: 64px; font-size: 10px; }
+    .nav-arrow { width: 64px; }
+    .screen { padding: 20px 16px 20px 10px; }
+    #s1-planets { gap: 24px; }
+    .earth-sphere { width: 110px; height: 110px; }
+    .sun-sphere   { width: 140px; height: 140px; }
+    .moon-sphere  { width: 80px;  height: 80px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="starCanvas"></canvas>
+
+<!-- ══════════ LEFT NAVIGATION ══════════ -->
+<nav id="nav">
+  <div class="logo">🚀 SPACE<br>SCIENCE</div>
+
+  <button class="nav-btn active" id="navBtn0" onclick="goTo(0)">
+    <span class="nav-icon">🌍</span> Warm-Up
+  </button>
+  <button class="nav-btn" id="navBtn1" onclick="goTo(1)">
+    <span class="nav-icon">📏</span> Size
+  </button>
+  <button class="nav-btn" id="navBtn2" onclick="goTo(2)">
+    <span class="nav-icon">🪨</span> Gravity
+  </button>
+  <button class="nav-btn" id="navBtn3" onclick="goTo(3)">
+    <span class="nav-icon">🔭</span> Models
+  </button>
+
+  <div class="nav-divider"></div>
+
+  <button class="nav-arrow" id="btnPrev" onclick="navigate(-1)" disabled>▲</button>
+  <div id="progress-bar"><div id="progress-fill" style="height:25%"></div></div>
+  <button class="nav-arrow" id="btnNext" onclick="navigate(1)">▼</button>
+
+  <div class="nav-divider"></div>
+  <div id="timer-display">⏱ 0:00</div>
+</nav>
+
+<!-- ══════════ CONTENT ══════════ -->
+<main id="content">
+
+  <!-- ────── SCREEN 1 : WARM-UP ────── -->
+  <section class="screen active" id="screen0">
+    <div class="screen-label">Screen 1 of 4 · Warm-Up · 10 Minutes</div>
+    <h1 class="screen-title">The Shape of Space</h1>
+    <p class="screen-sub">🌍 What shape are the Earth, the Sun, and the Moon?</p>
+
+    <div id="s1-planets">
+      <div class="planet-wrap" onclick="showFact('sun')">
+        <div class="sphere-3d sun-sphere" id="sunSphere"></div>
+        <div class="planet-name">☀️ The Sun</div>
+      </div>
+      <div class="planet-wrap" onclick="showFact('earth')">
+        <div class="sphere-3d earth-sphere" id="earthSphere"></div>
+        <div class="planet-name">🌍 The Earth</div>
+      </div>
+      <div class="planet-wrap" onclick="showFact('moon')">
+        <div class="sphere-3d moon-sphere" id="moonSphere"></div>
+        <div class="planet-name">🌑 The Moon</div>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin: 10px 0;">
+      <button class="big-btn btn-cyan" onclick="revealSpherical()">
+        🔍 What shape are they?
+      </button>
+    </div>
+
+    <div id="spherical-text">✨ SPHERICAL! ✨</div>
+
+    <div id="s1-facts" style="margin-top:16px;">
+      <div class="fact-bubble" onclick="showFact('earth')">🌍 Earth Fact</div>
+      <div class="fact-bubble" onclick="showFact('sun')">☀️ Sun Fact</div>
+      <div class="fact-bubble" onclick="showFact('moon')">🌑 Moon Fact</div>
+      <div class="fact-bubble" onclick="showFact('sphere')">🔵 Sphere Fact</div>
+      <div class="fact-bubble" onclick="showFact('gravity')">⬇️ Gravity Fact</div>
+    </div>
+
+    <div id="fact-display"></div>
+  </section>
+
+  <!-- ────── SCREEN 2 : SIZE ILLUSION ────── -->
+  <section class="screen" id="screen1">
+    <div class="screen-label">Screen 2 of 4 · Misconception Check · 10 Minutes</div>
+    <h1 class="screen-title">The Size Illusion 🔭</h1>
+    <p class="screen-sub">The Sun is HUGE. The Moon is small. But they look the same size from Earth! Why?</p>
+
+    <div id="s2-labels">
+      <span>☀️ The Sun – <span id="sunDistLabel">CLOSE</span></span>
+      <span>🌑 The Moon – <span id="moonDistLabel">FAR</span></span>
+    </div>
+
+    <div id="s2-stage">
+      <div id="s2-sun"></div>
+      <div id="s2-moon"></div>
+    </div>
+
+    <div class="slider-wrap">
+      <div class="slider-label">📏 Move the Slider – Watch what happens!</div>
+      <input type="range" id="distSlider" min="0" max="100" value="0"
+             oninput="updateDistance(this.value)">
+      <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:13px;color:rgba(255,255,255,0.45);">
+        <span>← Sun is Close</span>
+        <span>Sun is Far Away →</span>
+      </div>
+    </div>
+
+    <div id="s2-message">
+      <div style="font-size:24px;margin-bottom:8px;">🤯 Amazing!</div>
+      <div>The <span class="glow-gold">Sun</span> is <strong>HUGE</strong>, but it is very <strong>far away!</strong></div>
+      <div>The <span class="glow-cyan">Moon</span> is <strong>small</strong>, but it is very <strong>close!</strong></div>
+      <div style="margin-top:10px;font-size:15px;color:rgba(255,255,255,0.65);">That is why they look the same size! 🌓</div>
+    </div>
+
+    <div class="fact-card" style="margin-top:20px;">
+      <strong>🌟 Key Idea:</strong> Distance changes how big things look.
+      A big thing far away can look the same as a small thing close up!
+    </div>
+  </section>
+
+  <!-- ────── SCREEN 3 : GRAVITY ────── -->
+  <section class="screen" id="screen2">
+    <div class="screen-label">Screen 3 of 4 · Main Concept · 10 Minutes</div>
+    <h1 class="screen-title">Gravity Pulls it Together ⬇️</h1>
+    <p class="screen-sub">Gravity is a pulling force. It pulls everything towards the centre!</p>
+
+    <div id="s3-top">
+      <!-- Rock / sphere SVG -->
+      <div id="rock-container">
+        <div class="gravity-arrows" id="gravArrows">
+          <svg width="260" height="280" style="position:absolute;top:0;left:0;">
+            <defs>
+              <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+                <polygon points="0 0, 8 4, 0 8" fill="#00e5ff"/>
+              </marker>
+            </defs>
+            <!-- 8 gravity arrows pointing inward -->
+            <line x1="130" y1="20"  x2="130" y2="100" stroke="#00e5ff" stroke-width="3" marker-end="url(#arrowhead)"/>
+            <line x1="130" y1="260" x2="130" y2="180" stroke="#00e5ff" stroke-width="3" marker-end="url(#arrowhead)"/>
+            <line x1="20"  y1="140" x2="100" y2="140" stroke="#00e5ff" stroke-width="3" marker-end="url(#arrowhead)"/>
+            <line x1="240" y1="140" x2="162" y2="140" stroke="#00e5ff" stroke-width="3" marker-end="url(#arrowhead)"/>
+            <line x1="40"  y1="40"  x2="100" y2="98"  stroke="#00e5ff" stroke-width="3" marker-end="url(#arrowhead)"/>
+            <line x1="220" y1="40"  x2="162" y2="98"  stroke="#00e5ff" stroke-width="3" marker-end="url(#arrowhead)"/>
+            <line x1="40"  y1="240" x2="100" y2="182" stroke="#00e5ff" stroke-width="3" marker-end="url(#arrowhead)"/>
+            <line x1="220" y1="240" x2="162" y2="182" stroke="#00e5ff" stroke-width="3" marker-end="url(#arrowhead)"/>
+          </svg>
+        </div>
+        <svg id="rock-svg" width="200" height="200" viewBox="0 0 200 200">
+          <!-- Jagged rock polygon -->
+          <polygon id="rock-shape"
+            points="100,20 130,30 160,15 185,50 195,80 180,110 190,140 165,168 135,185 100,180 70,185 40,165 20,140 18,105 10,75 30,45 60,28 85,35"
+            fill="url(#rockGrad)" stroke="#8888aa" stroke-width="2"/>
+          <!-- craters/texture -->
+          <circle cx="80" cy="80" r="10" fill="rgba(0,0,0,0.25)"/>
+          <circle cx="130" cy="120" r="8" fill="rgba(0,0,0,0.2)"/>
+          <circle cx="100" cy="140" r="6" fill="rgba(0,0,0,0.15)"/>
+          <defs>
+            <radialGradient id="rockGrad" cx="35%" cy="35%">
+              <stop offset="0%"   stop-color="#9090b0"/>
+              <stop offset="60%"  stop-color="#6a6a88"/>
+              <stop offset="100%" stop-color="#404060"/>
+            </radialGradient>
+            <radialGradient id="sphereGrad" cx="35%" cy="35%">
+              <stop offset="0%"   stop-color="#3a9fd5"/>
+              <stop offset="50%"  stop-color="#1a6fc4"/>
+              <stop offset="100%" stop-color="#073060"/>
+            </radialGradient>
+          </defs>
+        </svg>
+      </div>
+
+      <!-- Controls -->
+      <div id="s3-controls">
+        <button class="big-btn btn-cyan" onclick="turnOnGravity()">
+          ⬇️ Turn on Gravity!
+        </button>
+        <div id="gravity-text">
+          🌍 <strong>Gravity pulls towards the centre!</strong><br>
+          This makes the Earth a <span class="glow-cyan">sphere</span>!<br>
+          All the bumps are pulled in – until it is smooth and round! 🌐
+        </div>
+        <div class="fact-card" id="s3-fact" style="display:none;">
+          <strong>💡 Did you know?</strong> The Earth's gravity pulled all the rock and dirt
+          towards its centre millions of years ago. That is why the Earth is round!
+        </div>
+      </div>
+    </div>
+
+    <!-- Jump Section -->
+    <div id="jump-section">
+      <div id="jump-title">👩‍🚀 Moon vs Earth Gravity – Who jumps higher?</div>
+      <div id="jump-stage">
+        <div id="astronaut">👩‍🚀</div>
+        <div id="jump-ground"></div>
+      </div>
+      <div id="jump-text">Tap a button to make the astronaut jump!</div>
+      <div class="jump-btns" style="margin-top:16px;">
+        <button class="big-btn btn-cyan" onclick="doJump('earth')">🌍 Jump on Earth</button>
+        <button class="big-btn btn-gold" onclick="doJump('moon')">🌑 Jump on Moon</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ────── SCREEN 4 : MODELS ────── -->
+  <section class="screen" id="screen3">
+    <div class="screen-label">Screen 4 of 4 · Plenary · 10 Minutes</div>
+    <h1 class="screen-title">Science Models 🔭</h1>
+    <p class="screen-sub">We use models to learn about things that are <span class="glow-gold">too big to see!</span></p>
+
+    <div class="fact-card glow" style="margin-bottom:20px;">
+      🎯 <strong>How to play:</strong> Tap a model below → then tap the correct label! Match all 4 to win! ⭐
+    </div>
+
+    <div id="s4-score">⭐ Score: <span id="scoreNum">0</span> / 4</div>
+    <div id="s4-feedback"></div>
+
+    <!-- Items to match -->
+    <div id="s4-game">
+      <div class="model-item" id="item-circle2d" onclick="selectItem('circle2d')">
+        <div class="circle-2d">Circle</div>
+        <div class="model-label">Item 1</div>
+        <div class="model-visual">Draw it on paper</div>
+      </div>
+      <div class="model-item" id="item-sphere3d" onclick="selectItem('sphere3d')">
+        <div class="sphere-3d-mini"></div>
+        <div class="model-label">Item 2</div>
+        <div class="model-visual">A spinning ball</div>
+      </div>
+      <div class="model-item" id="item-drawing" onclick="selectItem('drawing')">
+        <div style="font-size:64px;">🗺️</div>
+        <div class="model-label">Item 3</div>
+        <div class="model-visual">A flat map</div>
+      </div>
+      <div class="model-item" id="item-clay" onclick="selectItem('clay')">
+        <div style="font-size:64px;">🏺</div>
+        <div class="model-label">Item 4</div>
+        <div class="model-visual">A clay ball</div>
+      </div>
+    </div>
+
+    <!-- Drop Targets -->
+    <div id="s4-targets">
+      <div class="drop-target" id="target-2d" onclick="dropItem('2d')">
+        <div class="target-icon">📄</div>
+        <div class="target-label">Diagram (2D)</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.5);text-align:center;">Flat – drawn on paper</div>
+      </div>
+      <div class="drop-target" id="target-3d" onclick="dropItem('3d')">
+        <div class="target-icon">🔮</div>
+        <div class="target-label">Physical Model (3D)</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.5);text-align:center;">You can hold it!</div>
+      </div>
+    </div>
+
+    <div id="s4-summary">
+      <div style="font-size:48px;margin-bottom:12px;">🎉🌟🎉</div>
+      <div style="font-family:'Orbitron',monospace;font-size:24px;color:var(--green);margin-bottom:12px;">
+        EXCELLENT WORK!
+      </div>
+      <div style="font-size:18px;line-height:1.7;">
+        Scientists use <span class="glow-cyan">diagrams (2D)</span> and
+        <span class="glow-gold">physical models (3D)</span> to understand
+        things that are too big to see! 🚀<br><br>
+        <em>Like using clay to show how gravity makes the Earth round!</em>
+      </div>
+      <button class="big-btn btn-cyan" onclick="resetGame()" style="margin-top:20px;">
+        🔄 Play Again!
+      </button>
+    </div>
+  </section>
+
+</main>
+
+<!-- ══════════ JAVASCRIPT ══════════ -->
+<script>
+// ────── STARFIELD ──────
+const canvas = document.getElementById('starCanvas');
+const ctx = canvas.getContext('2d');
+let stars = [];
+
+function initStars() {
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  stars = [];
+  for (let i = 0; i < 220; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.8 + 0.2,
+      alpha: Math.random(),
+      speed: Math.random() * 0.008 + 0.003,
+      pulse: Math.random() * Math.PI * 2
+    });
+  }
+}
+
+function drawStars() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  stars.forEach(s => {
+    s.pulse += s.speed;
+    const a = 0.3 + 0.5 * Math.abs(Math.sin(s.pulse));
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,255,255,${a})`;
+    ctx.fill();
+  });
+  requestAnimationFrame(drawStars);
+}
+
+window.addEventListener('resize', initStars);
+initStars();
+drawStars();
+
+// ────── NAVIGATION ──────
+let currentScreen = 0;
+const TOTAL = 4;
+
+function goTo(n) {
+  document.querySelectorAll('.screen').forEach((s, i) => {
+    s.classList.toggle('active', i === n);
+  });
+  document.querySelectorAll('.nav-btn').forEach((b, i) => {
+    b.classList.toggle('active', i === n);
+  });
+  currentScreen = n;
+  document.getElementById('btnPrev').disabled = n === 0;
+  document.getElementById('btnNext').disabled = n === TOTAL - 1;
+  const pct = ((n + 1) / TOTAL * 100) + '%';
+  document.getElementById('progress-fill').style.height = pct;
+}
+
+function navigate(dir) {
+  const next = currentScreen + dir;
+  if (next >= 0 && next < TOTAL) goTo(next);
+}
+
+// ────── TIMER ──────
+let elapsed = 0;
+setInterval(() => {
+  elapsed++;
+  const m = Math.floor(elapsed / 60);
+  const s = elapsed % 60;
+  document.getElementById('timer-display').textContent =
+    `⏱ ${m}:${s.toString().padStart(2,'0')}`;
+}, 1000);
+
+// ════════════ SCREEN 1 ════════════
+const facts = {
+  earth:   '🌍 <strong>The Earth</strong> is a <span style="color:#00e5ff">sphere</span>. It looks like a ball. We live on it!',
+  sun:     '☀️ <strong>The Sun</strong> is a very big sphere made of hot gas. It gives us light and warmth!',
+  moon:    '🌑 <strong>The Moon</strong> is a smaller sphere. It orbits (goes around) the Earth!',
+  sphere:  '🔵 A <strong>sphere</strong> is a 3D round shape – like a ball. It is the same from all sides!',
+  gravity: '⬇️ <strong>Gravity</strong> is a pulling force. It pulls everything towards the centre. This is why planets are round!'
+};
+
+function showFact(key) {
+  const d = document.getElementById('fact-display');
+  d.innerHTML = `<div class="fact-card glow" style="animation:fadeIn 0.4s ease">${facts[key]}</div>`;
+  document.querySelectorAll('.fact-bubble').forEach(b => b.classList.remove('active'));
+}
+
+let sphericalShown = false;
+function revealSpherical() {
+  if (!sphericalShown) {
+    document.getElementById('spherical-text').classList.add('show');
+    sphericalShown = true;
+    // Gently wiggle all spheres
+    document.querySelectorAll('.sphere-3d').forEach(el => {
+      el.style.animation = 'spinSphere 4s linear infinite';
+    });
+    setTimeout(() => {
+      document.querySelectorAll('.sphere-3d').forEach(el => {
+        el.style.animation = '';
+      });
+    }, 4000);
+    spawnStars(5);
+  }
+}
+
+// ════════════ SCREEN 2 ════════════
+const sunEl  = document.getElementById('s2-sun');
+const moonEl = document.getElementById('s2-moon');
+
+function updateDistance(v) {
+  // v=0 → Sun big+close, Moon tiny+far
+  // v=100 → Sun smaller+far, Moon bigger+close  (matching size ≈ v=75)
+  const t = v / 100;
+  const sunSize  = Math.round(280 - t * 200);  // 280 → 80
+  const moonSize = Math.round(30  + t * 170);  // 30  → 200
+  sunEl.style.width  = sunSize  + 'px';
+  sunEl.style.height = sunSize  + 'px';
+  moonEl.style.width  = moonSize + 'px';
+  moonEl.style.height = moonSize + 'px';
+
+  const sunDist  = t > 0.5 ? 'FAR AWAY' : 'CLOSE';
+  const moonDist = t > 0.5 ? 'CLOSE'    : 'FAR';
+  document.getElementById('sunDistLabel').textContent  = sunDist;
+  document.getElementById('moonDistLabel').textContent = moonDist;
+
+  const msg = document.getElementById('s2-message');
+  if (v >= 70) { msg.classList.add('show'); } else { msg.classList.remove('show'); }
+}
+// init
+updateDistance(0);
+
+// ════════════ SCREEN 3 ════════════
+let gravityOn = false;
+
+function turnOnGravity() {
+  if (gravityOn) return;
+  gravityOn = true;
+
+  // Show arrows
+  document.getElementById('gravArrows').classList.add('show');
+
+  // After 0.8s morph to sphere
+  setTimeout(() => {
+    const shape = document.getElementById('rock-shape');
+    // Replace jagged polygon with smooth circle via CSS
+    shape.style.transition = 'all 1.2s cubic-bezier(0.34,1.56,0.64,1)';
+    // Animate to circle: replace polygon with circle
+    const svg = document.getElementById('rock-svg');
+    svg.innerHTML = `
+      <defs>
+        <radialGradient id="sphereGrad2" cx="35%" cy="35%">
+          <stop offset="0%"   stop-color="#3a9fd5"/>
+          <stop offset="50%"  stop-color="#1a6fc4"/>
+          <stop offset="100%" stop-color="#073060"/>
+        </radialGradient>
+      </defs>
+      <circle cx="100" cy="100" r="90"
+        fill="url(#sphereGrad2)"
+        style="filter:drop-shadow(0 0 20px rgba(0,229,255,0.6))"/>
+      <ellipse cx="65" cy="60" rx="25" ry="18"
+        fill="rgba(255,255,255,0.18)" style="filter:blur(4px)"/>`;
+    svg.style.filter = 'drop-shadow(0 0 25px rgba(0,229,255,0.5))';
+
+    document.getElementById('gravity-text').classList.add('show');
+    document.getElementById('s3-fact').style.display = 'block';
+    spawnStars(6);
+  }, 800);
+}
+
+// Jump physics
+let jumping = false;
+function doJump(planet) {
+  if (jumping) return;
+  jumping = true;
+  const astro = document.getElementById('astronaut');
+  const stage = document.getElementById('jump-stage');
+  const stageH = stage.offsetHeight;
+  const groundH = 28;
+
+  const isEarth = planet === 'earth';
+  const peakH  = isEarth ? 60  : 140;
+  const dur    = isEarth ? 700 : 1800;
+  const msg    = isEarth
+    ? '🌍 Strong gravity on Earth! Quick jump! ⬇️'
+    : '🌑 Weak gravity on Moon! High and slow! 🐢';
+
+  document.getElementById('jump-text').textContent = msg;
+
+  // Animate: go up then down
+  const start = Date.now();
+  function frame() {
+    const elapsed = Date.now() - start;
+    const t = Math.min(elapsed / dur, 1);
+    // Parabola: 4*t*(1-t)
+    const h = peakH * 4 * t * (1 - t);
+    astro.style.bottom = (groundH + h) + 'px';
+    if (t < 1) {
+      requestAnimationFrame(frame);
+    } else {
+      astro.style.bottom = groundH + 'px';
+      jumping = false;
+      document.getElementById('jump-text').textContent =
+        isEarth
+          ? '🌍 Earth gravity is strong. You fall fast!'
+          : '🌑 Moon gravity is weak. You float down slowly! The Moon has weaker gravity, but you STILL fall down!';
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+// ════════════ SCREEN 4 ════════════
+const correctAnswers = {
+  circle2d: '2d',
+  drawing:  '2d',
+  sphere3d: '3d',
+  clay:     '3d'
+};
+let selectedItem  = null;
+let score         = 0;
+let matched       = new Set();
+
+function selectItem(id) {
+  if (matched.has(id)) return;
+  selectedItem = id;
+  document.querySelectorAll('.model-item').forEach(el => {
+    if (!matched.has(el.id.replace('item-',''))){
+      el.classList.remove('selected');
+    }
+  });
+  document.getElementById('item-' + id).classList.add('selected');
+  document.getElementById('s4-feedback').textContent = '👆 Now tap a label below!';
+  document.querySelectorAll('.drop-target').forEach(t => t.classList.add('highlight'));
+}
+
+function dropItem(targetType) {
+  if (!selectedItem) {
+    document.getElementById('s4-feedback').textContent = '☝️ First tap a model above!';
+    return;
+  }
+  document.querySelectorAll('.drop-target').forEach(t => t.classList.remove('highlight'));
+
+  const itemEl = document.getElementById('item-' + selectedItem);
+  if (correctAnswers[selectedItem] === targetType) {
+    // Correct!
+    itemEl.classList.remove('selected');
+    itemEl.classList.add('correct');
+    matched.add(selectedItem);
+    score++;
+    document.getElementById('scoreNum').textContent = score;
+    document.getElementById('s4-feedback').innerHTML =
+      `<span class="glow-green">✅ Correct! Great job! ⭐</span>`;
+    spawnStars(8);
+    selectedItem = null;
+    if (score >= 4) {
+      setTimeout(() => {
+        document.getElementById('s4-summary').classList.add('show');
+        spawnStars(20);
+      }, 600);
+    }
+  } else {
+    // Wrong
+    itemEl.classList.add('wrong');
+    document.getElementById('s4-feedback').innerHTML =
+      `<span style="color:#ff4444">❌ Try again! Think carefully…</span>`;
+    setTimeout(() => {
+      itemEl.classList.remove('wrong','selected');
+    }, 600);
+    selectedItem = null;
+  }
+}
+
+function resetGame() {
+  score = 0;
+  matched.clear();
+  selectedItem = null;
+  document.getElementById('scoreNum').textContent = '0';
+  document.getElementById('s4-feedback').textContent = '';
+  document.getElementById('s4-summary').classList.remove('show');
+  document.querySelectorAll('.model-item').forEach(el => {
+    el.classList.remove('selected','correct','wrong');
+  });
+}
+
+// ────── STAR BURST EFFECT ──────
+function spawnStars(count) {
+  const emojis = ['⭐','🌟','✨','💫'];
+  for (let i = 0; i < count; i++) {
+    const star = document.createElement('div');
+    star.className = 'star-burst';
+    star.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    star.style.left = (20 + Math.random() * 70) + 'vw';
+    star.style.top  = (10 + Math.random() * 70) + 'vh';
+    star.style.animationDelay = (Math.random() * 0.4) + 's';
+    document.body.appendChild(star);
+    setTimeout(() => star.remove(), 1500);
+  }
+}
+
+// ────── KEYBOARD NAV (for teachers) ──────
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') navigate(1);
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   navigate(-1);
+  if (e.key >= '1' && e.key <= '4') goTo(parseInt(e.key) - 1);
+});
+</script>
+</body>
+</html>
